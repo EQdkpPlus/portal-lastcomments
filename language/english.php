@@ -28,6 +28,7 @@ $lang = array(
 	'lastcomments_name'			=> 'Last Comments',
 	'lastcomments_desc'			=> 'Show the last comments',
 	
+	'lastcomments_f_categories'	=> 'Article Category',
 	'lastcomments_f_limit'		=> 'Max. shown comments',
 	'lastcomments_f_length'		=> 'Max. text length',
 );

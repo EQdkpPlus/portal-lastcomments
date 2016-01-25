@@ -44,30 +44,60 @@ class lastcomments_portal extends portal_generic {
 	);
 	public $template_file = 'lastcomments_portal.html';
 	
-	protected $settings	= array(
-		'limit'	=> array(
-			'type'		=> 'spinner',
-			'default'	=> 5,
-			'min'		=> 1,
-			'size'		=> 2,
-		),
-		'length' => array(
-			'type'		=> 'spinner',
-			'default'	=> 350,
-			'min'		=> 50,
-			'max'		=> 500,
-			'step'		=> 25,
-			'size'		=> 3,
-		),
-	);
+	public function get_settings($state){
+		$arrCategories = $this->pdh->get('article_categories', 'id_list', array(true));
+		$settings = array(
+			'categories'	=> array(
+				'type'		=> 'multiselect',
+				'options'	=> $this->pdh->aget('article_categories', 'name', 0, array($arrCategories)),
+			),
+			'limit'	=> array(
+				'type'		=> 'spinner',
+				'default'	=> 5,
+				'min'		=> 1,
+				'size'		=> 2,
+			),
+			'length' => array(
+				'type'		=> 'spinner',
+				'default'	=> 150,
+				'min'		=> 50,
+				'max'		=> 500,
+				'step'		=> 25,
+				'size'		=> 3,
+			),
+		);
+		return $settings;
+	}
 	
 	public function output(){
 		$intLimit		= ($this->config('limit') > 0)? $this->config('limit') : 5;
-		$intLength		= ($this->config('length') > 0)? $this->config('length') : 350;
-		$arrComments	= $this->pdh->get('comment', 'comments');
+		$intLength		= ($this->config('length') > 0)? $this->config('length') : 150;
+		$arrCategoryIDs	= $this->config('categories');
+		if(empty($arrCategoryIDs)) $arrCategoryIDs = array();
 		
-		if($arrComments){
-			foreach(array_slice($arrComments, 0, $intLimit) as $arrComment){
+		//fetch all article_ids
+		$arrArticleIDs = $arrFilteredComments = array();
+		foreach($arrCategoryIDs as $intCategoryID){
+			$arrArticleIDs = array_merge($arrArticleIDs, $this->pdh->get('article_categories', 'published_id_list', array($intCategoryID, $this->user->id, false)));
+		}
+		$arrArticleIDs = array_unique($arrArticleIDs);
+		
+		//filter comments by attach_id = article_id
+		$arrComments = $this->pdh->get('comment', 'comments');
+		foreach($arrComments as $arrComment){
+			if(strpos($arrComment['attach_id'], '_') == false){
+				$intArticleID = $arrComment['attach_id'];
+			}else{
+				$intArticleID = explode('_', $arrComment['attach_id']);
+				$intArticleID = $intArticleID[1];
+			}
+			
+			if(in_array($arrComment['attach_id'], $arrArticleIDs)) $arrFilteredComments[] = $arrComment;
+		}
+		
+		//output filtered comments
+		if($arrFilteredComments){
+			foreach(array_slice($arrFilteredComments, 0, $intLimit) as $arrComment){
 				$strText = (strlen($arrComment['text']) > $intLength)? substr($arrComment['text'], 0, $intLength).'...' : $arrComment['text'];
 				
 				$this->tpl->assign_block_vars('pm_lastcomments', array(
