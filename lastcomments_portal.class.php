@@ -76,7 +76,7 @@ class lastcomments_portal extends portal_generic {
 		if(empty($arrCategoryIDs)) $arrCategoryIDs = array();
 		
 		//fetch all article_ids
-		$arrArticleIDs = $arrFilteredComments = $arrFilteredArticleIDs = array();
+		$arrArticleIDs = $arrFilteredComments = array();
 		foreach($arrCategoryIDs as $intCategoryID){
 			$arrArticleIDs = array_merge($arrArticleIDs, $this->pdh->get('article_categories', 'published_id_list', array($intCategoryID, $this->user->id, false)));
 		}
@@ -86,21 +86,29 @@ class lastcomments_portal extends portal_generic {
 		$arrComments = $this->pdh->get('comment', 'comments');
 		foreach($arrComments as $arrComment){
 			if(strpos($arrComment['attach_id'], '_') == false){
-				$intArticleID = $arrComment['attach_id'];
+				$arrComment['article_id']	= $arrComment['attach_id'];
+				$arrComment['is_cal_event']	= false;
 			}else{
-				$intArticleID = explode('_', $arrComment['attach_id']);
-				$intArticleID = $intArticleID[1];
+				$arrAttachIDs = explode('_', $arrComment['attach_id']);
+				$arrComment['article_id']	= $arrAttachIDs[0];
+				$arrComment['event_id']		= $arrAttachIDs[1];
+				$arrComment['is_cal_event']	= true;
 			}
 			
-			if(in_array($arrComment['attach_id'], $arrArticleIDs)){
-				$arrFilteredComments[]		= $arrComment;
-				$arrFilteredArticleIDs[]	= $arrComment['attach_id'];
+			if(in_array($arrComment['article_id'], $arrArticleIDs)){
+				$arrFilteredComments[] = $arrComment;
 			}
 		}
 		
 		//output filtered comments
 		if($arrFilteredComments){
-			foreach(array_slice($arrFilteredComments, 0, $intLimit) as $intFilteredKey => $arrComment){
+			foreach(array_slice($arrFilteredComments, 0, $intLimit) as $arrComment){
+				if($arrComment['is_cal_event']){
+					$strArticlePath = $this->routing->build('calendarevent', $this->pdh->get('calendar_events', 'name', array($arrComment['event_id'])), $arrComment['event_id'], true, true);
+				}else{
+					$strArticlePath = $this->pdh->get('articles', 'path', array($arrComment['article_id']));
+				}
+				
 				$strText = (strlen($arrComment['text']) > $intLength)? substr($arrComment['text'], 0, $intLength).'...' : $arrComment['text'];
 				
 				$this->tpl->assign_block_vars('pm_lastcomments', array(
@@ -109,8 +117,8 @@ class lastcomments_portal extends portal_generic {
 					'USER_NAME'		=> $this->pdh->geth('user', 'name', array($arrComment['userid'], '', '', true)),
 					'USER_AVATAR'	=> $this->pdh->geth('user', 'avatarimglink', array($arrComment['userid'], false)),
 					'DATE'			=> $this->time->user_date($arrComment['date'], true),
-					'TEXT'			=> $strText,
-					'ARTICLE_PATH'	=> ucfirst($this->pdh->get('articles', 'path', array($arrFilteredArticleIDs[$intFilteredKey]))),	
+					'TEXT'			=> $this->bbcode->toHTML($strText),
+					'ARTICLE_PATH'	=> ucfirst($strArticlePath),	
 				));
 			}
 		}
