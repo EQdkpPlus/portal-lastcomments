@@ -76,7 +76,7 @@ class lastcomments_portal extends portal_generic {
 		if(empty($arrCategoryIDs)) $arrCategoryIDs = array();
 		
 		//fetch all article_ids
-		$arrArticleIDs = $arrFilteredComments = array();
+		$arrArticleIDs = $arrFilteredComments = $arrFilteredArticleIDs = array();
 		foreach($arrCategoryIDs as $intCategoryID){
 			$arrArticleIDs = array_merge($arrArticleIDs, $this->pdh->get('article_categories', 'published_id_list', array($intCategoryID, $this->user->id, false)));
 		}
@@ -92,12 +92,15 @@ class lastcomments_portal extends portal_generic {
 				$intArticleID = $intArticleID[1];
 			}
 			
-			if(in_array($arrComment['attach_id'], $arrArticleIDs)) $arrFilteredComments[] = $arrComment;
+			if(in_array($arrComment['attach_id'], $arrArticleIDs)){
+				$arrFilteredComments[]		= $arrComment;
+				$arrFilteredArticleIDs[]	= $arrComment['attach_id'];
+			}
 		}
 		
 		//output filtered comments
 		if($arrFilteredComments){
-			foreach(array_slice($arrFilteredComments, 0, $intLimit) as $arrComment){
+			foreach(array_slice($arrFilteredComments, 0, $intLimit) as $intFilteredKey => $arrComment){
 				$strText = (strlen($arrComment['text']) > $intLength)? substr($arrComment['text'], 0, $intLength).'...' : $arrComment['text'];
 				
 				$this->tpl->assign_block_vars('pm_lastcomments', array(
@@ -107,6 +110,7 @@ class lastcomments_portal extends portal_generic {
 					'USER_AVATAR'	=> $this->pdh->geth('user', 'avatarimglink', array($arrComment['userid'], false)),
 					'DATE'			=> $this->time->user_date($arrComment['date'], true),
 					'TEXT'			=> $strText,
+					'ARTICLE_PATH'	=> ucfirst($this->pdh->get('articles', 'path', array($arrFilteredArticleIDs[$intFilteredKey]))),	
 				));
 			}
 		}
