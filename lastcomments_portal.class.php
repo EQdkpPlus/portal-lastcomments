@@ -27,7 +27,7 @@ class lastcomments_portal extends portal_generic {
 	protected static $path = 'lastcomments';
 	protected static $data = array(
 		'name'			=> 'LastComments Module',
-		'version'		=> '0.1.0',
+		'version'		=> '0.1.1',
 		'author'		=> 'Asitara',
 		'icon'			=> 'fa-comment',
 		'contact'		=> EQDKP_PROJECT_URL,
@@ -75,6 +75,9 @@ class lastcomments_portal extends portal_generic {
 		$arrCategoryIDs	= $this->config('categories');
 		if(empty($arrCategoryIDs)) $arrCategoryIDs = array();
 		
+		$myrootpath		= $this->server_path;
+		$this->bbcode->SetSmiliePath($myrootpath.'images/smilies');
+		
 		//fetch all article_ids
 		$arrArticleIDs = $arrFilteredComments = array();
 		foreach($arrCategoryIDs as $intCategoryID){
@@ -117,7 +120,7 @@ class lastcomments_portal extends portal_generic {
 					'USER_NAME'		=> $this->pdh->geth('user', 'name', array($arrComment['userid'], '', '', true)),
 					'USER_AVATAR'	=> $this->pdh->geth('user', 'avatarimglink', array($arrComment['userid'], false)),
 					'DATE'			=> $this->time->user_date($arrComment['date'], true),
-					'TEXT'			=> $this->bbcode->toHTML($strText),
+					'TEXT'			=> $this->bbcode->MyEmoticons($this->bbcode->toHTML($strText)),
 					'ARTICLE_PATH'	=> ucfirst($strArticlePath),	
 				));
 			}
