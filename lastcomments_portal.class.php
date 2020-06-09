@@ -27,7 +27,7 @@ class lastcomments_portal extends portal_generic {
 	protected static $path = 'lastcomments';
 	protected static $data = array(
 		'name'			=> 'LastComments Module',
-		'version'		=> '0.1.1',
+		'version'		=> '0.1.2',
 		'author'		=> 'Asitara',
 		'icon'			=> 'fa-comment',
 		'contact'		=> EQDKP_PROJECT_URL,
@@ -113,6 +113,9 @@ class lastcomments_portal extends portal_generic {
 				}
 				
 				$strText = (strlen($arrComment['text']) > $intLength)? substr($arrComment['text'], 0, $intLength).'...' : $arrComment['text'];
+				$strText = $this->bbcode->toHTML($strText);
+				$strText =  register('myemojione')->shortcodeToImage($strText);
+				$strText = $this->bbcode->MyEmoticons($strText);
 				
 				$this->tpl->assign_block_vars('pm_lastcomments', array(
 					'ID'			=> $arrComment['id'],
@@ -120,7 +123,7 @@ class lastcomments_portal extends portal_generic {
 					'USER_NAME'		=> $this->pdh->geth('user', 'name', array($arrComment['userid'], '', '', true)),
 					'USER_AVATAR'	=> $this->pdh->geth('user', 'avatarimglink', array($arrComment['userid'], false)),
 					'DATE'			=> $this->time->user_date($arrComment['date'], true),
-					'TEXT'			=> $this->bbcode->MyEmoticons($this->bbcode->toHTML($strText)),
+					'TEXT'			=> $strText,
 					'ARTICLE_PATH'	=> ucfirst($strArticlePath),	
 				));
 			}
