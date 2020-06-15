@@ -112,10 +112,13 @@ class lastcomments_portal extends portal_generic {
 					$strArticlePath = $this->pdh->get('articles', 'path', array($arrComment['article_id']));
 				}
 				
-				$strText = (strlen($arrComment['text']) > $intLength)? substr($arrComment['text'], 0, $intLength).'...' : $arrComment['text'];
+				$strText = $this->bbcode->remove_embeddedMedia($arrComment['text']);
+				
+				$strText = (strlen($arrComment['text']) > $intLength)? substr($strText, 0, $intLength).'...' : $strText;
 				$strText = $this->bbcode->toHTML($strText);
 				$strText =  register('myemojione')->shortcodeToImage($strText);
 				$strText = $this->bbcode->MyEmoticons($strText);
+
 				
 				$this->tpl->assign_block_vars('pm_lastcomments', array(
 					'ID'			=> $arrComment['id'],
