@@ -86,7 +86,7 @@ class lastcomments_portal extends portal_generic {
 		$arrArticleIDs = array_unique($arrArticleIDs);
 		
 		//filter comments by attach_id = article_id
-		$arrComments = $this->pdh->get('comment', 'comments');
+		$arrComments = $this->pdh->get('comment', 'filtered_list', array('articles'));
 		foreach($arrComments as $arrComment){
 			if(strpos($arrComment['attach_id'], '_') == false){
 				$arrComment['article_id']	= $arrComment['attach_id'];
