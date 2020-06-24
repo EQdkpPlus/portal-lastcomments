@@ -113,12 +113,12 @@ class lastcomments_portal extends portal_generic {
 				}
 				
 				$strText = $this->bbcode->remove_embeddedMedia($arrComment['text']);
+				$strText = str_replace('<div class="embed-content"><div class="embed-media"></div></div>', "", $strText);
 				
-				$strText = (strlen($arrComment['text']) > $intLength)? substr($strText, 0, $intLength).'...' : $strText;
+				$strText = (strlen($strText) > $intLength)? substr($strText, 0, $intLength).'...' : $strText;
 				$strText = $this->bbcode->toHTML($strText);
 				$strText =  register('myemojione')->shortcodeToImage($strText);
 				$strText = $this->bbcode->MyEmoticons($strText);
-
 				
 				$this->tpl->assign_block_vars('pm_lastcomments', array(
 					'ID'			=> $arrComment['id'],
