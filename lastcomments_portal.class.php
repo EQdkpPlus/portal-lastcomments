@@ -27,7 +27,7 @@ class lastcomments_portal extends portal_generic {
 	protected static $path = 'lastcomments';
 	protected static $data = array(
 		'name'			=> 'LastComments Module',
-		'version'		=> '0.1.2',
+		'version'		=> '0.1.3',
 		'author'		=> 'Asitara',
 		'icon'			=> 'fa-comment',
 		'contact'		=> EQDKP_PROJECT_URL,
