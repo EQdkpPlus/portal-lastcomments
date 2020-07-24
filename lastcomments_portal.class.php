@@ -27,7 +27,7 @@ class lastcomments_portal extends portal_generic {
 	protected static $path = 'lastcomments';
 	protected static $data = array(
 		'name'			=> 'LastComments Module',
-		'version'		=> '0.1.3',
+		'version'		=> '0.1.4',
 		'author'		=> 'Asitara',
 		'icon'			=> 'fa-comment',
 		'contact'		=> EQDKP_PROJECT_URL,
@@ -111,12 +111,19 @@ class lastcomments_portal extends portal_generic {
 				}else{
 					$strArticlePath = $this->pdh->get('articles', 'path', array($arrComment['article_id']));
 				}
-				
 				$strText = $this->bbcode->remove_embeddedMedia($arrComment['text']);
-				$strText = str_replace('<div class="embed-content"><div class="embed-media"></div></div>', "", $strText);
+				$strText = str_replace('<div class="embed-content"><div class="embed-media"></div></div>', " [Media]", $strText);
+				$intLengthPlain = strlen($strText);
 				
-				$strText = (strlen($strText) > $intLength)? substr($strText, 0, $intLength).'...' : $strText;
+				$strText = $this->autolink($strText);
 				$strText = $this->bbcode->toHTML($strText);
+				$intLengthHTML = strlen($strText);
+				$diff = $intLengthHTML-$intLengthPlain;
+				if($diff < 0) $diff = 2;
+
+				$strText = ($intLengthPlain > $intLength)? truncate($strText, $intLength+($diff/2), ' ...', false, true) : $strText;
+				
+				#$strText = $this->bbcode->toHTML($strText);
 				$strText =  register('myemojione')->shortcodeToImage($strText);
 				$strText = $this->bbcode->MyEmoticons($strText);
 				
@@ -139,6 +146,56 @@ class lastcomments_portal extends portal_generic {
 		');
 		
 		return 'Error: Template file is empty.';
+	}
+	
+	private function autolink($str) {
+		$str = ' ' . $str;
+		$str = preg_replace_callback(
+				"/\[url\s*+=\s*+([^]\s]++)]([^[]++)\[\/url]/im",
+				function ($matches) {
+					$url = strlen($matches[1]) ? $matches[1] : $matches[2];
+					$text = $matches[2];
+					if(mb_strlen($text) > 45){
+						$text = mb_substr($text, 0, 20) .'...' . mb_substr($text, -20);
+					}
+					return '[url='.$url.']'.$text.'[/url]';
+				},
+				$str
+				);
+		
+		$str = preg_replace_callback(
+				"/\[url]([^[]++)\[\/url]/im",
+				function ($matches) {
+					$url = $matches[1];
+					$text = $url;
+					if(mb_strlen($text) > 45){
+						$text = mb_substr($text, 0, 20) .'...' . mb_substr($text, -20);
+					}
+					return '[url='.$url.']'.$text.'[/url]';
+				},
+				$str
+				);
+		
+		//Normal
+		$str = preg_replace_callback(
+				"/(^|[^=\]\"])((((http|https|ftp):\/\/|www.)\S++))/im",
+				function ($matches) {
+					$url = $matches[2];
+					$text = $url;
+					if(mb_strlen($text) > 45){
+						$text = mb_substr($text, 0, 20) .'...' . mb_substr($text, -20);
+					}
+					return $matches[1].'[url='.$url.']'.$text.'[/url]';
+				},
+				$str
+				);
+		
+		$str = substr($str, 1);
+		$str = preg_replace('`url=\"www`','url="http://www',$str);
+		$str = preg_replace('`url=www`','url=http://www',$str);
+		
+		// fügt http:// hinzu, wenn nicht vorhanden
+		return trim($str);
 	}
 }
 ?>
